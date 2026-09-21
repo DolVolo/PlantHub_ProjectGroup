@@ -58,22 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // ตรวจสอบว่าเป็น hardcoded admin หรือไม่
-    if (user.uid.startsWith('admin-')) {
-      const adminProfile = {
-        uid: user.uid,
-        email: user.email || '',
-        firstName: 'Admin',
-        lastName: 'PlantHub',
-        role: 'admin' as const,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        emailVerified: true,
-      };
-      setProfile(adminProfile);
-      return;
-    }
-
     const existingProfile = await fetchUserProfile(user.uid);
 
     if (user.emailVerified && existingProfile && !existingProfile.emailVerified) {

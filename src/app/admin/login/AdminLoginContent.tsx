@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import { Shield, Eye, EyeOff } from "lucide-react";
 
 import { useAuthContext } from "../../providers/AuthProvider";
+import { fetchUserProfile } from "../../../services/firebase/auth.service";
 
 export default function AdminLoginContent() {
   const router = useRouter();
-  const { signIn } = useAuthContext();
+  const { signIn, signOut } = useAuthContext();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,21 +22,17 @@ export default function AdminLoginContent() {
     event.preventDefault();
     setError(null);
 
-    // ตรวจสอบว่าเป็นแอดมินหรือไม่
-    if (email !== "admin@planthub.dev") {
-      setError("อีเมลนี้ไม่มีสิทธิ์เข้าถึงระบบแอดมิน");
-      return;
-    }
-
     try {
       setIsSubmitting(true);
-      await signIn(email, password);
-      
-      // ตรวจสอบ role ของผู้ใช้ (จะตรวจสอบใน AuthProvider)
-      // if (user.role !== "admin") {
-      //   setError("บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบแอดมิน");
-      //   return;
-      // }
+      const user = await signIn(email, password);
+
+      // สิทธิ์แอดมินมาจาก users/{uid}.role ใน Firestore เท่านั้น
+      const userProfile = await fetchUserProfile(user.uid);
+      if (userProfile?.role !== "admin") {
+        await signOut();
+        setError("บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบแอดมิน");
+        return;
+      }
 
       router.push("/admin/dashboard");
     } catch (err: unknown) {
@@ -72,7 +69,7 @@ export default function AdminLoginContent() {
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="admin@planthub.dev"
+                placeholder="admin@example.com"
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200"
               />
             </div>
@@ -115,16 +112,6 @@ export default function AdminLoginContent() {
               {isSubmitting ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบแอดมิน"}
             </button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-slate-500">
-              ข้อมูลเข้าสู่ระบบเริ่มต้น:
-            </p>
-            <div className="mt-2 p-3 bg-slate-50 rounded-lg text-xs text-slate-600">
-              <p><strong>อีเมล:</strong> admin@planthub.dev</p>
-              <p><strong>รหัสผ่าน:</strong> Admin888</p>
-            </div>
-          </div>
 
           <div className="mt-6 text-center">
             <Link

@@ -17,13 +17,19 @@ service cloud.firestore {
         return request.auth != null && request.auth.uid == userId;
       }
 
-      function isSellerProfile() {
-        return resource.data.role == 'seller';
+      // Users may only pick customer or seller for themselves; admin is granted by an admin
+      function hasSelfAssignableRole() {
+        return request.resource.data.get('role', 'customer') in ['customer', 'seller'];
       }
 
-      // Allow users to manage their own profile
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update, delete: if isSelf() || isAdmin();
+      function keepsRole() {
+        return request.resource.data.get('role', null) == resource.data.get('role', null);
+      }
+
+      // Allow users to manage their own profile without escalating their role
+      allow create: if (isSelf() && hasSelfAssignableRole()) || isAdmin();
+      allow update: if (isSelf() && (keepsRole() || hasSelfAssignableRole())) || isAdmin();
+      allow delete: if isSelf() || isAdmin();
 
       // Allow authenticated users to read any user profile (for shop details, chat search)
       allow get: if request.auth != null;
@@ -91,16 +97,28 @@ service cloud.firestore {
     
     // Chat Messages collection
     match /chatMessages/{messageId} {
-      // Users can read messages from their chat rooms
-      allow read: if request.auth != null;
-      // Users can create messages
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.senderId;
-      // Users can update their own messages
-      allow update: if request.auth != null && (
-        request.auth.uid == resource.data.senderId ||
-        request.auth.uid == resource.data.recipientId ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
-      );
+      function isRoomParticipant(chatId) {
+        let room = get(/databases/$(database)/documents/chatRooms/$(chatId)).data;
+        return request.auth.uid == room.customerId || request.auth.uid == room.sellerId;
+      }
+
+      // Only participants of the message's chat room (and admins) can read it
+      allow read: if request.auth != null && (isRoomParticipant(resource.data.chatId) || isAdmin());
+      // Participants send messages as themselves
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.senderId
+        && (isRoomParticipant(request.resource.data.chatId) || isAdmin());
+      // Participants mark messages as read; admins can soft-delete
+      allow update: if request.auth != null && (isRoomParticipant(resource.data.chatId) || isAdmin());
+    }
+
+    // Chat History collection - one document per user listing their chat room IDs
+    match /chatHistory/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      // Starting a chat also records the room in the other participant's history
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['chatRooms', 'totalChats', 'updatedAt']);
     }
     
     // Coupons collection

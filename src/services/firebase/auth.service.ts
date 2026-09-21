@@ -13,11 +13,11 @@ import {
   getAuth,
   type User,
 } from "firebase/auth";
+import { FirebaseError, getApps, initializeApp } from "firebase/app";
 import { doc, setDoc, getDoc, serverTimestamp, deleteDoc } from "firebase/firestore";
 
 import { auth, firestore, firebaseApp } from "../../lib/firebaseClient";
-import { isHardcodedAdmin, getHardcodedAdmin } from "../../lib/adminConfig";
-import { createLog, type LogAction } from "./logs.service";
+import { createLog } from "./logs.service";
 
 export type AppUserRole = "customer" | "seller" | "admin";
 
@@ -37,6 +37,22 @@ export interface UserProfile {
   needsRoleSelection?: boolean;
   isNewUser?: boolean;
   storeName?: string;
+  shopName?: string;
+  shopDescription?: string;
+  savedAddresses?: SavedAddress[];
+}
+
+export interface SavedAddress {
+  id: string;
+  label: string;
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string;
+  district: string;
+  province: string;
+  postalCode: string;
+  isDefault: boolean;
 }
 
 export interface SignUpPayload {
@@ -93,32 +109,6 @@ export async function signUpUser(input: SignUpPayload) {
 }
 
 export async function signInUser(email: string, password: string) {
-  // ตรวจสอบ hardcoded admin ก่อน
-  if (isHardcodedAdmin(email, password)) {
-    const adminData = getHardcodedAdmin(email);
-    if (adminData) {
-      // สร้าง log สำหรับแอดมิน
-      await createLog(
-        'admin-' + email.replace('@', '-').replace('.', '-'),
-        email,
-        adminData.displayName,
-        "ADMIN_LOGIN",
-        "แอดมินเข้าสู่ระบบ",
-        { isHardcodedAdmin: true }
-      );
-      
-      // สร้าง mock user object สำหรับ hardcoded admin
-      const mockUser = {
-        uid: 'admin-' + email.replace('@', '-').replace('.', '-'),
-        email: email,
-        displayName: adminData.displayName,
-        emailVerified: true,
-        role: adminData.role,
-      } as any;
-      return mockUser;
-    }
-  }
-
   const credential = await signInWithEmailAndPassword(auth, email, password);
   
   // สร้าง log สำหรับผู้ใช้ทั่วไป
@@ -193,17 +183,23 @@ export async function signInWithFacebook() {
     }
 
     return user;
-  } catch (error: any) {
+  } catch (error) {
     // Handle specific Facebook errors
-    if (error.code === 'auth/account-exists-with-different-credential') {
-      throw new Error('มีบัญชีที่ใช้อีเมลนี้อยู่แล้ว กรุณาเข้าสู่ระบบด้วยวิธีเดิม');
-    } else if (error.code === 'auth/popup-closed-by-user') {
-      throw new Error('ยกเลิกการเข้าสู่ระบบ');
-    } else if (error.code === 'auth/popup-blocked') {
-      throw new Error('เบราว์เซอร์บล็อกหน้าต่างป๊อปอัพ กรุณาอนุญาตและลองใหม่อีกครั้ง');
-    }
-    throw error;
+    throwFriendlyPopupError(error);
   }
+}
+
+// แปลง error ของการล็อกอินแบบ popup ให้เป็นข้อความภาษาไทย
+function throwFriendlyPopupError(error: unknown): never {
+  const code = error instanceof FirebaseError ? error.code : undefined;
+  if (code === 'auth/account-exists-with-different-credential') {
+    throw new Error('มีบัญชีที่ใช้อีเมลนี้อยู่แล้ว กรุณาเข้าสู่ระบบด้วยวิธีเดิม');
+  } else if (code === 'auth/popup-closed-by-user') {
+    throw new Error('ยกเลิกการเข้าสู่ระบบ');
+  } else if (code === 'auth/popup-blocked') {
+    throw new Error('เบราว์เซอร์บล็อกหน้าต่างป๊อปอัพ กรุณาอนุญาตและลองใหม่อีกครั้ง');
+  }
+  throw error;
 }
 
 export async function signInWithGoogle() {
@@ -267,16 +263,9 @@ export async function signInWithGoogle() {
     }
 
     return user;
-  } catch (error: any) {
+  } catch (error) {
     // Handle specific Google errors
-    if (error.code === 'auth/account-exists-with-different-credential') {
-      throw new Error('มีบัญชีที่ใช้อีเมลนี้อยู่แล้ว กรุณาเข้าสู่ระบบด้วยวิธีเดิม');
-    } else if (error.code === 'auth/popup-closed-by-user') {
-      throw new Error('ยกเลิกการเข้าสู่ระบบ');
-    } else if (error.code === 'auth/popup-blocked') {
-      throw new Error('เบราว์เซอร์บล็อกหน้าต่างป๊อปอัพ กรุณาอนุญาตและลองใหม่อีกครั้ง');
-    }
-    throw error;
+    throwFriendlyPopupError(error);
   }
 }
 
@@ -341,12 +330,14 @@ export const createUserByAdmin = async (
   lastName: string,
   role: AppUserRole
 ): Promise<{ uid: string; email: string }> => {
+  // สร้างบัญชีผ่าน Firebase app ตัวที่สอง เพื่อไม่ให้แอดมินที่ล็อกอินอยู่ถูกสลับเป็นผู้ใช้ใหม่
+  const secondaryAuth = getSecondaryAuth();
+
   try {
-    // สร้างผู้ใช้ใน Firebase Auth โดยตรง
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
     const user = userCredential.user;
 
-    // สร้างข้อมูลผู้ใช้ใน Firestore
+    // บันทึกข้อมูลในนามแอดมิน (firestore ผูกกับ auth หลัก) ตาม firestore.rules
     await setDoc(doc(firestore, "users", user.uid), {
       uid: user.uid,
       email: email,
@@ -379,8 +370,17 @@ export const createUserByAdmin = async (
   } catch (error) {
     console.error("Error creating user by admin:", error);
     throw error;
+  } finally {
+    await signOut(secondaryAuth);
   }
 };
+
+function getSecondaryAuth() {
+  const appName = "admin-user-creation";
+  const secondaryApp =
+    getApps().find((app) => app.name === appName) ?? initializeApp(firebaseApp.options, appName);
+  return getAuth(secondaryApp);
+}
 
 // Email verification functions
 export async function sendEmailVerificationToUser(): Promise<void> {

@@ -70,11 +70,11 @@ export default function ProfilePage() {
         lastName: profile.lastName || "",
         phone: profile.phone || "",
         address: profile.address || "",
-        shopName: (profile as any).shopName || "",
-        shopDescription: (profile as any).shopDescription || "",
+        shopName: profile.shopName || "",
+        shopDescription: profile.shopDescription || "",
       });
       setImageUrl(profile.profileImage || "");
-      setSavedAddresses((profile as any).savedAddresses || []);
+      setSavedAddresses(profile.savedAddresses || []);
     }
   }, [profile]);
 
@@ -390,7 +390,7 @@ export default function ProfilePage() {
                         className="mt-1 w-full rounded-lg border-2 border-emerald-200 px-4 py-2 text-base font-semibold text-slate-900 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                       />
                     ) : (
-                      <p className="text-base font-semibold text-slate-900 mt-1">{(profile as any).shopName || "ยังไม่ได้ระบุ"}</p>
+                      <p className="text-base font-semibold text-slate-900 mt-1">{profile.shopName || "ยังไม่ได้ระบุ"}</p>
                     )}
                     <p className="text-xs text-slate-500 mt-1">ชื่อนี้จะแสดงในการค้นหาและหน้าสินค้า</p>
                   </div>
@@ -414,7 +414,7 @@ export default function ProfilePage() {
                         className="mt-1 w-full rounded-lg border-2 border-emerald-200 px-4 py-2 text-base font-semibold text-slate-900 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                       />
                     ) : (
-                      <p className="text-base font-semibold text-slate-900 mt-1 whitespace-pre-line">{(profile as any).shopDescription || "ยังไม่ได้ระบุ"}</p>
+                      <p className="text-base font-semibold text-slate-900 mt-1 whitespace-pre-line">{profile.shopDescription || "ยังไม่ได้ระบุ"}</p>
                     )}
                     <p className="text-xs text-slate-500 mt-1">อธิบายเกี่ยวกับร้านและสินค้าของคุณ</p>
                   </div>

@@ -91,9 +91,9 @@ export default function CreateCouponPage() {
 
       alert("สร้างคูปองเรียบร้อยแล้ว");
       router.push("/my-shop/coupons");
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      alert(error?.message ?? "ไม่สามารถสร้างคูปองได้");
+      alert(error instanceof Error ? error.message : "ไม่สามารถสร้างคูปองได้");
     } finally {
       setSubmitting(false);
     }

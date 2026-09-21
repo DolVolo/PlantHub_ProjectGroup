@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Plus, Eye, EyeOff, Edit3, Trash2, ArrowLeft, BarChart3, Package, Tag, TrendingUp, X, Save, Search, MessageCircle } from "lucide-react";
 import { onValue, ref, remove, update } from "firebase/database";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot, type DocumentData } from "firebase/firestore";
 
 import { useAuthContext } from "../providers/AuthProvider";
 import { realtimeDb, firestore } from "@/lib/firebaseClient";
@@ -36,7 +36,7 @@ export default function MyShopPage() {
   const router = useRouter();
   const { profile, initializing } = useAuthContext();
   const [products, setProducts] = useState<Record<string, ShopProduct>>({});
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<DocumentData[]>([]);
   const [ready, setReady] = useState(false);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");

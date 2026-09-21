@@ -41,8 +41,8 @@ export default function VerifyEmailPage() {
     try {
       await sendEmailVerification();
       setSuccess('ส่งอีเมลยืนยันเรียบร้อยแล้ว กรุณาตรวจสอบอีเมลของคุณ');
-    } catch (err: any) {
-      setError(err.message || 'เกิดข้อผิดพลาดในการส่งอีเมลยืนยัน');
+    } catch (err) {
+      setError((err instanceof Error && err.message) || 'เกิดข้อผิดพลาดในการส่งอีเมลยืนยัน');
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +70,7 @@ export default function VerifyEmailPage() {
       } else {
         setError('ยังไม่ได้ยืนยันอีเมล กรุณาตรวจสอบอีเมลของคุณ');
       }
-    } catch (err: any) {
+    } catch {
       setError('เกิดข้อผิดพลาดในการตรวจสอบสถานะอีเมล');
     } finally {
       setIsCheckingEmail(false);
@@ -89,8 +89,8 @@ export default function VerifyEmailPage() {
     try {
       await cancelRegistrationNew();
       router.push('/register');
-    } catch (err: any) {
-      setError(err.message || 'เกิดข้อผิดพลาดในการยกเลิกการสมัครสมาชิก');
+    } catch (err) {
+      setError((err instanceof Error && err.message) || 'เกิดข้อผิดพลาดในการยกเลิกการสมัครสมาชิก');
     } finally {
       setIsLoading(false);
     }
@@ -269,8 +269,8 @@ export default function VerifyEmailPage() {
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• ตรวจสอบกล่องจดหมายและโฟลเดอร์ Spam</li>
               <li>• คลิกลิงก์ยืนยันในอีเมลที่ส่งไป</li>
-              <li>• กดปุ่ม "ยืนยันอีเมลแล้ว" หลังจากคลิกลิงก์ในอีเมล</li>
-              <li>• หากไม่พบอีเมล ให้กดปุ่ม "ส่งอีเมลอีกครั้ง"</li>
+              <li>• กดปุ่ม &ldquo;ยืนยันอีเมลแล้ว&rdquo; หลังจากคลิกลิงก์ในอีเมล</li>
+              <li>• หากไม่พบอีเมล ให้กดปุ่ม &ldquo;ส่งอีเมลอีกครั้ง&rdquo;</li>
               <li>• หลังจากยืนยันแล้ว จะพาไปหน้าแรก</li>
             </ul>
           </div>

@@ -65,7 +65,7 @@ export function useSellerOrders(sellerId: string) {
             status_th: statusToThai(data.status ?? "pending"),
             paymentMethod: data.paymentMethod ?? "-",
             updatedAt: data.updatedAt?.toDate?.() ?? null,
-            items: (data.items ?? []).filter((item: any) => item.sellerId === sellerId),
+            items: (data.items ?? []).filter((item: SellerOrderItem) => item.sellerId === sellerId),
           } satisfies SellerOrder;
         });
         setOrders(fetchedOrders);

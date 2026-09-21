@@ -12,7 +12,7 @@ import {
 
 import { useAuthContext } from "../../providers/AuthProvider";
 import { ref, onValue } from "firebase/database";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { realtimeDb, firestore } from "@/lib/firebaseClient";
 
 type Product = {
@@ -59,23 +59,16 @@ export default function TopProductsPage() {
 
         const products = productsSnapshot as Record<string, Product>;
 
-        // ดึงข้อมูลออเดอร์
-        const ordersRef = collection(firestore, "orders");
-        const ordersSnapshot = await new Promise((resolve) => {
-          onSnapshot(ordersRef, (snapshot) => {
-            const orders = snapshot.docs.map(doc => doc.data());
-            resolve(orders);
-          }, { onlyOnce: true });
-        });
-
-        const orders = ordersSnapshot as any[];
+        // ดึงข้อมูลออเดอร์ (อ่านครั้งเดียว)
+        const ordersSnapshot = await getDocs(collection(firestore, "orders"));
+        const orders = ordersSnapshot.docs.map((orderDoc) => orderDoc.data());
 
         // คำนวณยอดขายของแต่ละสินค้า
         const productSales: Record<string, ProductSales> = {};
 
         orders.forEach(order => {
           if (order.items && Array.isArray(order.items)) {
-            order.items.forEach((item: any) => {
+            order.items.forEach((item: { productId: string; price: number; quantity: number }) => {
               const productId = item.productId;
               if (products[productId]) {
                 if (!productSales[productId]) {

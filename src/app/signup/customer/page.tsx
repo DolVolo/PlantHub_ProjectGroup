@@ -39,9 +39,9 @@ export default function CustomerRegistrationPage() {
         setTimeout(() => {
           router.push('/');
         }, 2000);
-      } catch (error: any) {
+      } catch (error) {
         console.error('Customer registration error:', error);
-        setError(error.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก');
+        setError((error instanceof Error && error.message) || 'เกิดข้อผิดพลาดในการสมัครสมาชิก');
         setIsLoading(false);
       }
     };

@@ -77,7 +77,7 @@ export default function ShopPage() {
           const allProducts = snapshot.val() ?? {};
           // Filter products by sellerId
           const sellerProducts: Record<string, Product> = {};
-          Object.entries(allProducts).forEach(([id, product]: [string, any]) => {
+          Object.entries(allProducts as Record<string, Omit<Product, "id">>).forEach(([id, product]) => {
             if (product.sellerId === sellerId && product.active !== false) {
               sellerProducts[id] = { ...product, id };
             }

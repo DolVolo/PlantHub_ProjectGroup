@@ -86,7 +86,7 @@ export default function AdminDashboard() {
     const unsubscribeUsers = onSnapshot(usersRef, (snapshot) => {
       const users = snapshot.docs.map(doc => doc.data() as Record<string, unknown>);
       const newUsersToday = users.filter((user: Record<string, unknown>) => {
-        const createdAt = (user.createdAt as any)?.toDate?.() || new Date(user.createdAt as string);
+        const createdAt = (user.createdAt as { toDate?: () => Date } | undefined)?.toDate?.() || new Date(user.createdAt as string);
         return createdAt >= today;
       }).length;
 
@@ -101,9 +101,9 @@ export default function AdminDashboard() {
     const productsRef = ref(realtimeDb, "products");
     const unsubscribeProducts = onValue(productsRef, (snapshot) => {
       const products = snapshot.val() || {};
-      const productList = Object.values(products);
-      const newProductsToday = productList.filter((product: any) => {
-        const createdAt = new Date(product.createdAt);
+      const productList = Object.values(products) as Array<{ createdAt?: number }>;
+      const newProductsToday = productList.filter((product) => {
+        const createdAt = new Date(product.createdAt ?? 0);
         return createdAt >= today;
       }).length;
 
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
     const unsubscribeOrders = onSnapshot(ordersRef, (snapshot) => {
       const orders = snapshot.docs.map(doc => doc.data() as Record<string, unknown>);
       const ordersToday = orders.filter((order: Record<string, unknown>) => {
-        const createdAt = (order.createdAt as any)?.toDate?.() || new Date(order.createdAt as string);
+        const createdAt = (order.createdAt as { toDate?: () => Date } | undefined)?.toDate?.() || new Date(order.createdAt as string);
         return createdAt >= today;
       });
 

@@ -14,6 +14,7 @@ import {
   type ChatRoom 
 } from '../../services/firebase/chat.service';
 import { MessageCircle, X, Send, Search, User, Shield, Store, Clock, Trash2, Sparkles } from 'lucide-react';
+import { FirebaseError } from 'firebase/app';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { firestore } from '@/lib/firebaseClient';
 import { chatTrigger } from '../hooks/useChatTrigger';
@@ -471,15 +472,10 @@ export default function ChatPanel({ isOpen, onClose, onUnreadCountChange, trigge
       
       console.log('✅ Filtered users found:', filtered.length, filtered);
       setSearchedSellers(filtered);
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error searching users:', error);
-      console.error('Error details:', {
-        code: error.code,
-        message: error.message,
-        name: error.name
-      });
-      
-      if (error.code === 'permission-denied') {
+
+      if (error instanceof FirebaseError && error.code === 'permission-denied') {
         console.error('🚫 Permission denied! Check Firestore rules for users collection');
       }
       
@@ -537,14 +533,9 @@ export default function ChatPanel({ isOpen, onClose, onUnreadCountChange, trigge
       // Clear search
       setSearchQuery('');
       setSearchedSellers([]);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error starting chat with seller:', error);
-      console.error('Error details:', {
-        code: error?.code,
-        message: error?.message,
-        name: error?.name
-      });
-      alert(`ไม่สามารถเริ่มการสนทนาได้: ${error?.message || 'กรุณาลองอีกครั้ง'}`);
+      alert(`ไม่สามารถเริ่มการสนทนาได้: ${(error instanceof Error && error.message) || 'กรุณาลองอีกครั้ง'}`);
     }
   };
 
@@ -818,7 +809,7 @@ export default function ChatPanel({ isOpen, onClose, onUnreadCountChange, trigge
                     </p>
                     {(filteredChatRooms.length > 0 || searchedSellers.length > 0) && (
                       <span className="text-xs text-gray-500">
-                        กำลังค้นหา: "{searchQuery}"
+                        กำลังค้นหา: &ldquo;{searchQuery}&rdquo;
                       </span>
                     )}
                   </div>

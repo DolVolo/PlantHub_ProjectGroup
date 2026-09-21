@@ -8,6 +8,7 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 
 import { useAuthContext } from "../../providers/AuthProvider";
 import { firestore } from "@/lib/firebaseClient";
+import type { OrderItemSnapshot } from "@/services/firebase/orders.service";
 
 type SalesReport = {
   totalSales: number;
@@ -58,12 +59,12 @@ export default function ReportsPage() {
       
       orders.forEach(order => {
         if (order.items) {
-          order.items.forEach((item: any) => {
-            if (productStats[item.id]) {
-              productStats[item.id].quantity += item.quantity;
-              productStats[item.id].revenue += item.price * item.quantity;
+          order.items.forEach((item: OrderItemSnapshot) => {
+            if (productStats[item.productId]) {
+              productStats[item.productId].quantity += item.quantity;
+              productStats[item.productId].revenue += item.price * item.quantity;
             } else {
-              productStats[item.id] = {
+              productStats[item.productId] = {
                 name: item.name,
                 quantity: item.quantity,
                 revenue: item.price * item.quantity,

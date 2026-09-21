@@ -11,7 +11,7 @@ export interface LogEntry {
   timestamp: Date;
   ipAddress?: string;
   userAgent?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export const LOG_ACTIONS = {
@@ -56,7 +56,7 @@ export const createLog = async (
   userName: string,
   action: LogAction,
   details: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<void> => {
   try {
     const logId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

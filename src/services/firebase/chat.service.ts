@@ -128,9 +128,9 @@ export async function createChatRoom(
     }
     
     return docRef.id;
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Error creating chat room:', error);
-    throw new Error(`ไม่สามารถสร้างห้องแชทได้: ${error.message}`);
+    throw new Error(`ไม่สามารถสร้างห้องแชทได้: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

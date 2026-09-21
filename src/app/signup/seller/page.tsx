@@ -45,9 +45,9 @@ export default function SellerRegistrationPage() {
 
       // พาไปหน้าแรก
       router.push('/');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Seller registration error:', error);
-      setError(error.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก');
+      setError((error instanceof Error && error.message) || 'เกิดข้อผิดพลาดในการสมัครสมาชิก');
     } finally {
       setIsLoading(false);
     }

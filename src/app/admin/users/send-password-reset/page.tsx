@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Mail, Send, User } from "lucide-react";
+import { FirebaseError } from "firebase/app";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebaseClient";
 import { toast } from "react-hot-toast";
@@ -29,12 +30,13 @@ export default function SendPasswordResetPage() {
       await sendPasswordResetEmail(auth, email);
       toast.success(`ส่งอีเมลตั้งรหัสผ่านไปยัง ${email} แล้ว`);
       setEmail("");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error sending password reset email:", err);
+      const code = err instanceof FirebaseError ? err.code : undefined;
       let errorMessage = "ไม่สามารถส่งอีเมลได้";
-      if (err.code === "auth/user-not-found") {
+      if (code === "auth/user-not-found") {
         errorMessage = "ไม่พบผู้ใช้ที่ใช้อีเมลนี้";
-      } else if (err.code === "auth/invalid-email") {
+      } else if (code === "auth/invalid-email") {
         errorMessage = "รูปแบบอีเมลไม่ถูกต้อง";
       }
       setError(errorMessage);

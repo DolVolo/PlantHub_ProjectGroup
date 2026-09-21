@@ -43,9 +43,9 @@ export default function GoogleSignupPage() {
           router.push('/signup/user-type');
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Google signup error:', error);
-      setError(error.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก');
+      setError((error instanceof Error && error.message) || 'เกิดข้อผิดพลาดในการสมัครสมาชิก');
     } finally {
       setIsLoading(false);
     }

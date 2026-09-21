@@ -7,6 +7,7 @@ import { collection, query, where, onSnapshot, orderBy, doc, getDoc } from "fire
 
 import { useAuthContext } from "../providers/AuthProvider";
 import { firestore } from "../../lib/firebaseClient";
+import type { InvoiceOrder } from "../../lib/invoicePdf";
 import { useChatTrigger } from "../hooks/useChatTrigger";
 
 type OrderItem = {
@@ -30,6 +31,9 @@ type Order = {
   updatedAt: Date;
   items: OrderItem[];
   sellerId?: string;
+  paymentStatus?: string;
+  discountCode?: string | null;
+  shippingAddress?: InvoiceOrder["shippingAddress"];
 };
 
 // Helper functions for Thai translations
@@ -83,7 +87,22 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
   const { openChatWithSeller } = useChatTrigger();
+
+  // สร้าง PDF ในเบราว์เซอร์ ผู้ซื้ออ่านออเดอร์ของตัวเองได้ตาม firestore.rules อยู่แล้ว
+  const handleDownloadInvoice = async (order: Order) => {
+    setDownloadingInvoiceId(order.id);
+    try {
+      const { downloadInvoicePdf } = await import("../../lib/invoicePdf");
+      await downloadInvoicePdf(order);
+    } catch (err) {
+      console.error("Failed to generate invoice", err);
+      alert("ไม่สามารถสร้างใบเสร็จได้ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  };
 
   useEffect(() => {
     if (!firebaseUser) {
@@ -360,10 +379,16 @@ export default function OrdersPage() {
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     <button
                       type="button"
-                      className="inline-flex items-center gap-2 rounded-full border border-emerald-500 px-5 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50"
-                      onClick={() => window.open(`/api/orders/${order.id}/invoice`, "_blank")}
+                      className="inline-flex items-center gap-2 rounded-full border border-emerald-500 px-5 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50 disabled:cursor-wait disabled:opacity-70"
+                      onClick={() => handleDownloadInvoice(order)}
+                      disabled={downloadingInvoiceId === order.id}
                     >
-                      <FileDown className="h-4 w-4" /> ดาวน์โหลดใบเสร็จ PDF
+                      {downloadingInvoiceId === order.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <FileDown className="h-4 w-4" />
+                      )}{" "}
+                      ดาวน์โหลดใบเสร็จ PDF
                     </button>
                     <button
                       type="button"

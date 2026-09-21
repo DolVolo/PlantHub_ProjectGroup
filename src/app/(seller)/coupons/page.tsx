@@ -8,10 +8,11 @@ import {
   createCoupon,
   fetchCouponsBySeller,
   updateCoupon,
-  CouponInput,
+  type CouponInput,
+  type CouponRecord,
 } from "../../../services/firebase/coupons.service";
 
-interface CouponFormState extends CouponInput {
+interface CouponFormState extends Omit<CouponInput, "startDate" | "endDate"> {
   startDate?: string;
   endDate?: string;
   maxRedemptions?: number | null;
@@ -34,7 +35,7 @@ const defaultForm: CouponFormState = {
 
 export default function SellerCouponsPage() {
   const { profile } = useAuthContext();
-  const [coupons, setCoupons] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<CouponRecord[]>([]);
   const [form, setForm] = useState<CouponFormState>(defaultForm);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +58,7 @@ export default function SellerCouponsPage() {
     load();
   }, [profile?.uid]);
 
-  const handleChange = (field: keyof CouponFormState, value: any) => {
+  const handleChange = <K extends keyof CouponFormState>(field: K, value: CouponFormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -86,8 +87,8 @@ export default function SellerCouponsPage() {
       setForm(defaultForm);
       const result = await fetchCouponsBySeller(profile.uid);
       setCoupons(result);
-    } catch (err: any) {
-      setError(err?.message ?? "สร้างคูปองไม่สำเร็จ");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "สร้างคูปองไม่สำเร็จ");
     }
   };
 

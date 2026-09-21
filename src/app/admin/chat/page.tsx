@@ -221,7 +221,7 @@ export default function AdminChatPage() {
                   ].map(({ key, label }) => (
                     <button
                       key={key}
-                      onClick={() => setFilter(key as any)}
+                      onClick={() => setFilter(key as typeof filter)}
                       className={`px-3 py-1 text-sm rounded-full transition-colors ${
                         filter === key
                           ? 'bg-emerald-500 text-white'

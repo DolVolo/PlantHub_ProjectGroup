@@ -8,6 +8,7 @@ import {
   where,
   runTransaction,
   serverTimestamp,
+  type Timestamp,
 } from "firebase/firestore";
 
 import { firestore } from "../../lib/firebaseClient";
@@ -24,7 +25,22 @@ export interface CouponInput {
   sellerId?: string | null;
 }
 
-export async function fetchCouponsBySeller(sellerId: string) {
+export interface CouponRecord {
+  id: string;
+  code: string;
+  description?: string;
+  discountPercent?: number | null;
+  discountAmount?: number | null;
+  startDate?: Timestamp | null;
+  endDate?: Timestamp | null;
+  maxRedemptions?: number | null;
+  currentRedemptions?: number;
+  minOrderAmount?: number | null;
+  sellerId?: string | null;
+  active?: boolean;
+}
+
+export async function fetchCouponsBySeller(sellerId: string): Promise<CouponRecord[]> {
   const couponsRef = collection(firestore, "coupons");
   const q = query(couponsRef, where("sellerId", "==", sellerId));
   const snapshot = await getDocs(q);
@@ -32,7 +48,7 @@ export async function fetchCouponsBySeller(sellerId: string) {
   return snapshot.docs.map((docSnapshot) => ({
     id: docSnapshot.id,
     ...docSnapshot.data(),
-  }));
+  }) as CouponRecord);
 }
 
 export async function createCoupon(sellerId: string, data: CouponInput) {

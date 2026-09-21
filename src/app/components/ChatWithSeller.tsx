@@ -107,8 +107,8 @@ export default function ChatWithSeller({
   };
 
   const handleCloseChat = async () => {
-    if (chatRoomId) {
-      await closeChatRoom(chatRoomId);
+    if (chatRoomId && firebaseUser && profile) {
+      await closeChatRoom(chatRoomId, firebaseUser.uid, `${profile.firstName} ${profile.lastName}`.trim());
     }
     onClose();
   };

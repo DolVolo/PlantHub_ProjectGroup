@@ -74,8 +74,8 @@ export default function CheckoutPage() {
 
   // Load saved addresses from profile
   useEffect(() => {
-    if (profile && (profile as any).savedAddresses) {
-      const addresses = (profile as any).savedAddresses;
+    if (profile && profile.savedAddresses) {
+      const addresses = profile.savedAddresses;
       setSavedAddresses(addresses);
       
       // Auto-select default address if exists
@@ -251,8 +251,8 @@ export default function CheckoutPage() {
 
       clearCart();
       router.push("/orders");
-    } catch (err: any) {
-      setError(err?.message ?? "ไม่สามารถสร้างคำสั่งซื้อได้ กรุณาลองใหม่อีกครั้ง");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "ไม่สามารถสร้างคำสั่งซื้อได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsSubmitting(false);
     }

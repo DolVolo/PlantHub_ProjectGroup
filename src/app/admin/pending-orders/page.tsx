@@ -97,9 +97,9 @@ export default function PendingOrdersPage() {
       );
 
       return () => unsubscribe();
-    } catch (err: any) {
+    } catch (err) {
       console.error("❌ Error setting up listener:", err);
-      setError(`ไม่สามารถเชื่อมต่อฐานข้อมูลได้: ${err.message}`);
+      setError(`ไม่สามารถเชื่อมต่อฐานข้อมูลได้: ${err instanceof Error ? err.message : String(err)}`);
       setLoading(false);
     }
   }, [profile, router]);

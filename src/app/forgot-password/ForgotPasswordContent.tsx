@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail, CheckCircle, AlertCircle } from "lucide-react";
+import { FirebaseError } from "firebase/app";
 import { sendPasswordResetEmail } from "firebase/auth";
 
 import { auth } from "@/lib/firebaseClient";
@@ -21,10 +22,10 @@ export default function ForgotPasswordContent() {
     try {
       await sendPasswordResetEmail(auth, email);
       setSuccess(true);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error sending password reset email:", error);
-      
-      switch (error.code) {
+
+      switch (error instanceof FirebaseError ? error.code : undefined) {
         case "auth/user-not-found":
           setError("ไม่พบอีเมลนี้ในระบบ");
           break;

@@ -11,6 +11,8 @@ import {
   Shield
 } from "lucide-react";
 
+import { FirebaseError } from "firebase/app";
+
 import { useAuthContext } from "../../../providers/AuthProvider";
 import { createUserByAdmin } from "@/services/firebase/auth.service";
 import { toast } from "react-hot-toast";
@@ -59,16 +61,17 @@ export default function AddUserPage() {
 
       toast.success("เพิ่มผู้ใช้สำเร็จ! อีเมลยืนยันและลิงก์ตั้งรหัสผ่านถูกส่งไปยังผู้ใช้แล้ว");
       router.push("/admin/users");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error adding user:", err);
-      
+
       // แสดงข้อความ error ที่เป็นมิตร
+      const code = err instanceof FirebaseError ? err.code : undefined;
       let errorMessage = "ไม่สามารถเพิ่มผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง";
-      if (err.code === "auth/email-already-in-use") {
+      if (code === "auth/email-already-in-use") {
         errorMessage = "อีเมลนี้ถูกใช้งานแล้ว";
-      } else if (err.code === "auth/weak-password") {
+      } else if (code === "auth/weak-password") {
         errorMessage = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
-      } else if (err.code === "auth/invalid-email") {
+      } else if (code === "auth/invalid-email") {
         errorMessage = "รูปแบบอีเมลไม่ถูกต้อง";
       }
       
@@ -182,7 +185,7 @@ export default function AddUserPage() {
               <select
                 id="role"
                 value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value as any })}
+                onChange={(e) => setForm({ ...form, role: e.target.value as UserForm["role"] })}
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800"
               >
                 <option value="customer">ผู้ซื้อ</option>

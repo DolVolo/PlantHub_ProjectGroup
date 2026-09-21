@@ -79,9 +79,9 @@ export default function AddProductPage() {
 
       toast.success("บันทึกสินค้าเรียบร้อยแล้ว");
       setForm(defaultForm);
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      toast.error(error?.message ?? "ไม่สามารถบันทึกสินค้าได้");
+      toast.error(error instanceof Error ? error.message : "ไม่สามารถบันทึกสินค้าได้");
     } finally {
       setSubmitting(false);
     }

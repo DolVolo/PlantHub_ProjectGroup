@@ -28,7 +28,7 @@ export interface Product {
   createdAt: Date;
   updatedAt: Date;
   tags?: string[];
-  specifications?: Record<string, any>;
+  specifications?: Record<string, unknown>;
 }
 
 const PRODUCTS_COLLECTION = 'products';
